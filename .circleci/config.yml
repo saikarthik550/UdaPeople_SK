@@ -236,16 +236,14 @@ jobs:
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli
+      - image: python:3.11.0-alpine3.17
     steps:
       # Checkout code from git
       - checkout
       - run:
           name: Install dependencies
           command: |
-            yum -y install tar gzip jq npm
-            curl -sL https://rpm.nodesource.com/setup_13.8.0 | bash -
-            yum -y install nodejs
+            apk add --update --no-cache tar gzip nodejs npm aws-cli curl 
       - run:
           name: Get backend url
           command: |
