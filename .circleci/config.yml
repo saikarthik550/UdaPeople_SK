@@ -228,7 +228,11 @@ jobs:
       - run:
           name: Send migration results to kvdb
           command: |
-            curl --insecure https://kvdb.io/8pypAWcFgWQkLPfFFn4EWh/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            if grep -q "SELECT" ~/project/backend/src/migrations.txt
+            then
+                curl --insecure https://kvdb.io/8pypAWcFgWQkLPfFFn4EWh/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi    
+     
      # Here's where you will add some code to rollback on failure  
       - destroy-environment    
       - revert-migrations    
@@ -278,7 +282,11 @@ jobs:
       # Checkout code from git
       - checkout
       # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["8d:79:b3:8b:53:74:bc:41:b7:fb:1d:18:f2:26:d1:ed"]
       # attach workspace
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
@@ -288,10 +296,12 @@ jobs:
           command: |
             # your code here
             cd backend
-            npm i
+            npm install
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
