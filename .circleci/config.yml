@@ -206,6 +206,17 @@ jobs:
       - run:
           name: Configure server
           command: |
+            echo ENVIRONMENT=production > backend/.env
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> backend/.env
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> backend/.env
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> backend/.env
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> backend/.env
+            echo TYPEORM_PORT=$TYPEORM_PORT >> backend/.env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> backend/.env
+            cat backend/.env
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
@@ -217,36 +228,33 @@ jobs:
     docker:
       # Docker image here that supports NodeJS
       - image: circleci/node:14.18.1
-    steps:
-      # Checkout code from git
-      - checkout
-      - run:
-          name: Run migrations
-          command: |
-           # Your code here
-            cd backend
-            echo ENVIRONMENT=production >> ".env"
-            echo NODE_ENV=production >> ".env"
-            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> ".env"
-            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> ".env"
-            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> ".env"
-            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> ".env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
-            sudo npm install 
-            npm run migrations > migrations_dump.txt
-            cat migrations_dump.txt
-      - run:
-          name: Send migration results to kvdb
-          command: |
-            if grep -q "SELECT" ~/project/backend/src/migrations.txt
-            then
-                curl --insecure https://kvdb.io/8pypAWcFgWQkLPfFFn4EWh/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
-            fi    
-     
+    run-migrations:
+      <<: *node_image
+      steps:
+        - checkout
+        - run:
+            name: Install dependencies
+            command: |
+              sudo apt install -y tar gzip curl
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip -qq awscliv2.zip
+              sudo ./aws/install
+        - restore_cache:
+            keys: [backend-build]
+        - run:
+            name: Run migrations
+            command: |
+              cd backend/src
+              npm run migrations >> migrations.txt
+              cat migrations.txt
+        - run:
+            name: Send migration results to kvdb
+            command: |
+                if grep -q "SELECT" ~/project/backend/src/migrations.txt
+                then
+                    # If you are using kvdb.io, generate the bucket ID "${KVDB_BUCKET}" in your local terminal first
+                    curl --insecure https://kvdb.io/8pypAWcFgWQkLPfFFn4EWh/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                fi
      # Here's where you will add some code to rollback on failure  
       - destroy-environment    
       - revert-migrations    
