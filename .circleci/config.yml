@@ -348,8 +348,13 @@ jobs:
             --output text)
             echo ${BACKEND_IP}
             export API_URL="http://${BACKEND_IP}:3030"
+            export API_URL1="http://${BACKEND_IP}:3030/api/status"
             echo "${API_URL}"
-            if curl --connect-timeout 5  "${API_URL}/api/status" | grep "ok"
+            echo "URL for ref"
+            echo "${API_URL1}"
+            echo "Sleeping for 1 minute"
+            sleep 60
+            if curl "${API_URL}/api/status" | grep "ok"
             then
               return 0
             else
@@ -368,8 +373,8 @@ jobs:
               return 1
             fi
       # Here's where you will add some code to rollback on failure 
-      - destroy-environment 
-      - revert-migrations
+      #- destroy-environment 
+      #- revert-migrations
  
 workflows:
   default:
