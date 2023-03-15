@@ -433,7 +433,6 @@ jobs:
               aws cloudformation delete-stack --stack-name udapeople-backend-${OLD_CIRCLE_WORKFLOW_ID}
               echo successfully deleting old S3 bucket andEC2 instance.
             fi    
-8pypAWcFgWQkLPfFFn4EWh
 workflows:
   default:
     jobs:
