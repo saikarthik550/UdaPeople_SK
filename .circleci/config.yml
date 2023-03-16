@@ -448,7 +448,7 @@ jobs:
             echo $OldWorkflowID1
 
             export OldWorkflowID=$(cat ~/project/OldWorkflowID.txt)
-            printing file output
+            echo printing file output
             echo $OldWorkflowID
 
 
