@@ -444,11 +444,11 @@ jobs:
             
             
             echo ${CIRCLE_WORKFLOW_ID:0:7}
-            echo printing curl outut
+            echo "printing curl outut"
             echo $OldWorkflowID1
 
             export OldWorkflowID=$(cat ~/project/OldWorkflowID.txt)
-            echo printing file output
+            echo "printing file output"
             echo $OldWorkflowID
 
 
