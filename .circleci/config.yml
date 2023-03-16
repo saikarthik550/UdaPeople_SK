@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.12.1 
+  slack: circleci/slack@4.12.1
 
 commands:
   destroy-environment:
@@ -391,13 +391,13 @@ jobs:
           name: store old workflowid  
           command: |
             # your code here
-            export OldWorkflowID=$(aws cloudformation list-exports \
+            cat OldWorkflowID.txt  
+            aws cloudformation list-exports \
               --query "Exports[?Name==\`WorkflowID\`].Value" \
               --no-paginate \
-              --output text)
-            echo ${OldWorkflowID:11:7}
-            echo ${OldWorkflowID:11:7} >> ~/project/OldWorkflowID.txt
-            cat ~/project/OldWorkflowID.txt
+              --output text >> OldWorkflowID.txt
+            cat OldWorkflowID.txt  
+
       - persist_to_workspace:
           root: ~/
           paths:
@@ -405,16 +405,22 @@ jobs:
 
       - run:
           name: Update cloudfront distribution
-          command: |        
-            
+          command: |      
+            # your code here
+            export OldWorkflowID=$(aws cloudformation list-exports \
+              --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate \
+              --output text)
+
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
-
-            curl -k https://kvdb.io/4X1Nf5qMxuXPnbFkGJPp8U/old_workflow_id -d "${OldWorkflowID:11:7}"
-            echo Current WorflowID: "${CIRCLE_WORKFLOW_ID:0:7}"  
+            
+            echo ${CIRCLE_WORKFLOW_ID:0:7}
+            echo $OldWorkflowID
+            echo ${OldWorkflowID:11:7}
            
       # Here's where you will add some code to rollback on failure  
       - destroy-environment
@@ -434,31 +440,23 @@ jobs:
       - run:
           name: Remove old stacks and files
           command: |
-            
-            export OldWorkflowID1=$(curl --insecure https://kvdb.io/4X1Nf5qMxuXPnbFkGJPp8U/old_workflow_id)
-            echo $OldWorkflowID1
 
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
               --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
             echo Stack names: "${STACKS[@]}"
-            
-            
-            echo ${CIRCLE_WORKFLOW_ID:0:7}
-            echo "printing curl outut"
-            echo $OldWorkflowID1
+
+            cat OldWorkflowID.txt 
 
             export OldWorkflowID=$(cat ~/project/OldWorkflowID.txt)
-            echo "printing file output"
-            echo $OldWorkflowID
-
-
-    
+            echo printing file output
+            echo $OldWorkflowID    
+            echo ${OldWorkflowID:11:7}
               
-            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
+            if [[ "${CIRCLE_WORKFLOW_ID}" != "${OldWorkflowID}" ]]
             then
-              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive || true
-              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}" || true
-              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}" || true
+              aws s3 rm "s3://udapeople-${OldWorkflowID:11:7}" --recursive || true
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID:11:7}" || true
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID:11:7}" || true
             else
               echo "Stack is the latest"
             fi        
