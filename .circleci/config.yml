@@ -396,12 +396,12 @@ jobs:
               --no-paginate \
               --output text)
             echo ${OldWorkflowID:11:7}
-            echo ${OldWorkflowID:11:7} >> ~/OldWorkflowID.txt
-            cat ~/OldWorkflowID.txt
+            echo ${OldWorkflowID:11:7} >> ~/project/OldWorkflowID.txt
+            cat ~/project/OldWorkflowID.txt
       - persist_to_workspace:
           root: ~/
           paths:
-            - oldworkflowid.txt      
+            - project/OldWorkflowID.txt   
 
       - run:
           name: Update cloudfront distribution
@@ -447,7 +447,7 @@ jobs:
             echo printing curl outut
             echo $OldWorkflowID1
 
-            export OldWorkflowID=$(cat ~/oldworkflowid.txt)
+            export OldWorkflowID=$(cat ~/project/OldWorkflowID.txt)
             printing file output
             echo $OldWorkflowID
 
