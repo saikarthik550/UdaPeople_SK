@@ -397,7 +397,7 @@ jobs:
               --output text)
             echo ${OldWorkflowID:11:7}
             echo ${OldWorkflowID:11:7} >> ~/OldWorkflowID.txt
-            cat ~/project/OldWorkflowID.txt
+            cat ~/OldWorkflowID.txt
       - persist_to_workspace:
           root: ~/
           paths:
