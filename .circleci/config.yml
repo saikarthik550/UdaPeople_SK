@@ -377,7 +377,7 @@ jobs:
   cloudfront-update:
     docker:
       # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli
+      - image: python:3.11.0-alpine3.16
     steps:
       # Checkout code from git
       - checkout
@@ -385,15 +385,27 @@ jobs:
           name: Install dependencies
           command: |
             # your code here
-            yum -y install tar gzip
+            apk add --update --no-cache tar gzip nodejs npm curl
+            pip install awscli
       - run:
-          name: Update cloudfront distribution
+          name: store old workflowid  
           command: |
             # your code here
             export OldWorkflowID=$(aws cloudformation list-exports \
               --query "Exports[?Name==\`WorkflowID\`].Value" \
               --no-paginate \
               --output text)
+            echo ${OldWorkflowID:11:7}
+            echo ${OldWorkflowID:11:7} >> ~/OldWorkflowID.txt
+            cat ~/project/OldWorkflowID.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - oldworkflowid.txt      
+
+      - run:
+          name: Update cloudfront distribution
+          command: |        
             
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
@@ -403,10 +415,7 @@ jobs:
 
             curl -k https://kvdb.io/4X1Nf5qMxuXPnbFkGJPp8U/old_workflow_id -d "${OldWorkflowID:11:7}"
             echo Current WorflowID: "${CIRCLE_WORKFLOW_ID:0:7}"  
-            echo printing 
-            echo ${CIRCLE_WORKFLOW_ID:0:7}
-            echo $OldWorkflowID
-            echo ${OldWorkflowID:11:7}
+           
       # Here's where you will add some code to rollback on failure  
       - destroy-environment
       - revert-migrations
@@ -426,16 +435,23 @@ jobs:
           name: Remove old stacks and files
           command: |
             
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/4X1Nf5qMxuXPnbFkGJPp8U/old_workflow_id)
-            echo $OldWorkflowID
+            export OldWorkflowID1=$(curl --insecure https://kvdb.io/4X1Nf5qMxuXPnbFkGJPp8U/old_workflow_id)
+            echo $OldWorkflowID1
 
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
               --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
             echo Stack names: "${STACKS[@]}"
             
-            echo printing 
+            
             echo ${CIRCLE_WORKFLOW_ID:0:7}
+            echo printing curl outut
+            echo $OldWorkflowID1
+
+            export OldWorkflowID=$(cat ~/oldworkflowid.txt)
+            printing file output
             echo $OldWorkflowID
+
+
     
               
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
