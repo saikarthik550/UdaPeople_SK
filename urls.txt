@@ -1,5 +1,5 @@
 URL01 -  hhttps://github.com/saikarthik550/UdaPeople_SK
-URL02 -  http://udapeople-8a4389d.s3.amazonaws.com/index.html#/employees
-URL03 -  http://d34rulb9915p1f.cloudfront.net/#/employees
-URL04 -  http://54.144.132.16:3030/api/status
-URL05 -  http://ec2-54-165-63-154.compute-1.amazonaws.com:9090/targets
+URL02 -  http://udapeople-05c8bbe.s3.amazonaws.com/index.html#/employees
+URL03 -  http://dqa8wk36ezva3.cloudfront.net/#/employees
+URL04 -  http://52.91.132.109:3030/api/status
+URL05 -  http://ec2-52-86-39-252.compute-1.amazonaws.com:9090/targets
