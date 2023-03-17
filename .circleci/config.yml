@@ -27,13 +27,11 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure https://kvdb.io/8pypAWcFgWQkLPfFFn4EWh/migration_${CIRCLE_WORKFLOW_ID:0:7})
-            if [[${SUCCESS} == 1]];
-            then
+            
               cd ~/project/backend
               npm install
               npm run migrations:revert
-            fi        
+                 
 
 jobs:
   build-frontend:
